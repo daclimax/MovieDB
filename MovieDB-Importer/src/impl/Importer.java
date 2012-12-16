@@ -1,4 +1,4 @@
-package de.tmy.moviedbimporter.impl;
+package impl;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ResourceBundle;
 
 import org.apache.log4j.Logger;
 import org.dom4j.Attribute;
@@ -63,36 +65,14 @@ public class Importer {
 
 	final private static Logger LOG = Logger.getLogger(Importer.class);
 
-	final static private Properties props = new Properties();
-
-	Importer() {
-		try {
-			// load Properties
-			Importer.props.load(Importer.class.getClassLoader().getResourceAsStream("moviedb.properties"));
-
-			// load mysql jdbc driver
-			Class.forName("com.mysql.jdbc.Driver");
-
-			// Setup the connection with the DB
-			Importer.connect = DriverManager.getConnection("jdbc:mysql://localhost/"
-					+ Importer.props.getProperty(Importer.MOVIEDB_KEY) + "?user="
-					+ Importer.props.getProperty(Importer.DBUSER_KEY) + "&password="
-					+ Importer.props.getProperty(Importer.DBPASS_KEY));
-
-		} catch (final ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (final SQLException e2) {
-			e2.printStackTrace();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-	}
+	final static ResourceBundle props = ResourceBundle.getBundle("moviedb");
 
 	// final String API_URL = "http://imdbapi.org/";
 	// final String API_URL = "http://cattweasel.net/search/";
 
 	/**
-	 * checks the Document with searchResults, whether the wanted movie is in there
+	 * checks the Document with searchResults, whether the wanted movie is in
+	 * there
 	 * 
 	 * @param doc
 	 * @param movieName
@@ -122,29 +102,24 @@ public class Importer {
 					final Attribute parentAttribute = parentAttributesIterator.next();
 
 					// TITLE
-					if ((resultMap.get(Importer.TITLE) == null)
-							&& parentAttribute.getName().toUpperCase().equals(Importer.TITLE)
-							&& String.valueOf(parentAttribute.getData()).trim().toUpperCase()
-									.equals(movieName.toUpperCase())) {
+					if ((resultMap.get(Importer.TITLE) == null) && parentAttribute.getName().toUpperCase().equals(Importer.TITLE)
+							&& String.valueOf(parentAttribute.getData()).trim().toUpperCase().equals(movieName.toUpperCase())) {
 						resultMap.put(Importer.TITLE, String.valueOf(parentAttribute.getData()));
 
 					} else if (parentAttribute.getName().toUpperCase().equals(Importer.TITLE)
-							&& String.valueOf(parentAttribute.getData()).trim().toUpperCase()
-									.equals(movieName.toUpperCase())) {
+							&& String.valueOf(parentAttribute.getData()).trim().toUpperCase().equals(movieName.toUpperCase())) {
 						final String warningReason = "more than one movie with name \"" + movieName
 								+ "\" was found. the found movie may not the searched one.";
 						resultMap.put(Importer.WARNING, warningReason);
 					}
 
 					// YEAR
-					if ((resultMap.get(Importer.YEAR) == null)
-							&& parentAttribute.getName().toUpperCase().equals(Importer.YEAR)) {
+					if ((resultMap.get(Importer.YEAR) == null) && parentAttribute.getName().toUpperCase().equals(Importer.YEAR)) {
 						resultMap.put(Importer.YEAR, String.valueOf(parentAttribute.getData()));
 					}
 
 					// IMDB_ID
-					if ((resultMap.get(Importer.IMDB_ID) == null)
-							&& parentAttribute.getName().toUpperCase().equals(Importer.IMDB_ID)) {
+					if ((resultMap.get(Importer.IMDB_ID) == null) && parentAttribute.getName().toUpperCase().equals(Importer.IMDB_ID)) {
 						resultMap.put(Importer.IMDB_ID, String.valueOf(parentAttribute.getData()));
 					}
 				}
@@ -162,10 +137,11 @@ public class Importer {
 	public static boolean checkWhetherMovieIsAlreadyInDatabase(final String movieName) {
 		boolean isAlreadyInDb = false;
 		try {
-			final String queryStr = "SELECT count(MOV_ID) FROM Movies WHERE MOV_TITLE = " + movieName;
-
-			final Statement statement = Importer.connect.createStatement();
-			final ResultSet resultSet = statement.executeQuery(queryStr);
+			final String queryStr = "SELECT count(MOV_ID) FROM movies WHERE MOV_TITLE=? ; ";
+			
+			PreparedStatement statement = connect.prepareStatement(queryStr);
+			statement.setString(1, movieName);
+			final ResultSet resultSet = statement.executeQuery();
 
 			isAlreadyInDb = resultSet.next();
 		} catch (final SQLException e) {
@@ -177,8 +153,8 @@ public class Importer {
 	@SuppressWarnings("unchecked")
 	public static void loadMovieDetails(final Map<String, String> resultMap) {
 		// Forming a complete url ready to send
-		final String dataurl = Importer.API_URL + "?i=" + resultMap.get(Importer.IMDB_ID) + "&r="
-				+ Importer.OUTPUT_FORMAT + "&plot=" + Importer.PLOT_FORMAT;
+		final String dataurl = Importer.API_URL + "?i=" + resultMap.get(Importer.IMDB_ID) + "&r=" + Importer.OUTPUT_FORMAT + "&plot="
+				+ Importer.PLOT_FORMAT;
 
 		Importer.LOG.info("Getting details from service ...");
 
@@ -201,26 +177,22 @@ public class Importer {
 					final Attribute parentAttribute = parentAttributesIterator.next();
 
 					// GENRE
-					if ((resultMap.get(Importer.GENRE) == null)
-							&& parentAttribute.getName().toUpperCase().equals(Importer.GENRE)) {
+					if ((resultMap.get(Importer.GENRE) == null) && parentAttribute.getName().toUpperCase().equals(Importer.GENRE)) {
 						resultMap.put(Importer.GENRE, String.valueOf(parentAttribute.getData()));
 					}
 
 					// ACTORS
-					if ((resultMap.get(Importer.ACTORS) == null)
-							&& parentAttribute.getName().toUpperCase().equals(Importer.ACTORS)) {
+					if ((resultMap.get(Importer.ACTORS) == null) && parentAttribute.getName().toUpperCase().equals(Importer.ACTORS)) {
 						resultMap.put(Importer.ACTORS, String.valueOf(parentAttribute.getData()));
 					}
 
 					// PLOT
-					if ((resultMap.get(Importer.PLOT) == null)
-							&& parentAttribute.getName().toUpperCase().equals(Importer.PLOT)) {
+					if ((resultMap.get(Importer.PLOT) == null) && parentAttribute.getName().toUpperCase().equals(Importer.PLOT)) {
 						resultMap.put(Importer.PLOT, String.valueOf(parentAttribute.getData()));
 					}
 
 					// POSTER_URL
-					if ((resultMap.get(Importer.POSTER_URL) == null)
-							&& parentAttribute.getName().toUpperCase().equals(Importer.POSTER_URL)) {
+					if ((resultMap.get(Importer.POSTER_URL) == null) && parentAttribute.getName().toUpperCase().equals(Importer.POSTER_URL)) {
 						resultMap.put(Importer.POSTER_URL, String.valueOf(parentAttribute.getData()));
 					}
 
@@ -253,10 +225,27 @@ public class Importer {
 
 	public static void main(final String[] args) {
 
-		BufferedReader br = null;
-
 		try {
-			final File file = new File(Importer.props.getProperty(Importer.EXPORT_FILE_KEY));
+			// load mysql jdbc driver
+			Class.forName("com.mysql.jdbc.Driver");
+
+			// Setup the connection with the DB
+			Importer.connect = DriverManager.getConnection("jdbc:mysql://localhost/" + props.getString(Importer.MOVIEDB_KEY)
+					+ "?user=" + props.getString(Importer.DBUSER_KEY) + "&password="
+					+ props.getString(Importer.DBPASS_KEY));
+					
+		} catch (final ClassNotFoundException e) {
+			LOG.info("mysql driver not found");
+			e.printStackTrace();
+		} catch (final SQLException e2) {
+			LOG.info("Connection could not established.");
+			e2.printStackTrace();
+		}
+
+		BufferedReader br = null;
+		try {
+			LOG.info(props.getString(Importer.EXPORT_FILE_KEY));
+			final File file = new File(props.getString(Importer.EXPORT_FILE_KEY));
 			br = new BufferedReader(new FileReader(file));
 
 			while (br.ready()) {
@@ -264,10 +253,11 @@ public class Importer {
 				// remove some characters and parentFolders
 				String movieName = br.readLine();
 				movieName = movieName.replace("./", "");
-				movieName = movieName.substring(movieName.indexOf("/"), movieName.length());
+				movieName = movieName.substring(movieName.indexOf("/") + 1, movieName.length());
 
 				if (Importer.checkWhetherMovieIsAlreadyInDatabase(movieName)) {
-					// Remove unwanted space from moviename by trimming it and replace whitespaces with "+"
+					// Remove unwanted space from moviename by trimming it and
+					// replace whitespaces with "+"
 					final String movieNameForURL = movieName.trim().replace(" ", "+");
 
 					final Document doc = Importer.searchForMovies(movieNameForURL);
