@@ -1,5 +1,6 @@
 package impl;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -15,6 +16,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -38,6 +41,8 @@ public class Importer {
 
 	final static String EXPORT_FILE_KEY = "export_movies_file";
 
+	final static String EXPORT_POSTER_PATH = "/opt/jetty/export/posters/";
+
 	final static String GENRE = "GENRE";
 
 	final static String IMDB_ID = "IMDBID";
@@ -54,6 +59,8 @@ public class Importer {
 
 	final static String POSTER_URL = "POSTER";
 
+	final static String EXPORT_POSTER_FORMAT = ".jpg";
+
 	final static String TITLE = "TITLE";
 
 	final static String WARNING = "WARNING";
@@ -68,6 +75,101 @@ public class Importer {
 
 	// final String API_URL = "http://imdbapi.org/";
 	// final String API_URL = "http://cattweasel.net/search/";
+
+	public static void main(final String[] args) {
+
+		try {
+			// load mysql jdbc driver
+			Class.forName("com.mysql.jdbc.Driver");
+
+			// Setup the connection with the DB
+			Importer.connect = DriverManager.getConnection("jdbc:mysql://localhost/" + props.getString(Importer.MOVIEDB_KEY) + "?user="
+					+ props.getString(Importer.DBUSER_KEY) + "&password=" + props.getString(Importer.DBPASS_KEY));
+
+		} catch (final ClassNotFoundException e) {
+			LOG.info("mysql driver not found");
+			e.printStackTrace();
+		} catch (final SQLException e2) {
+			LOG.info("Connection could not established.");
+			e2.printStackTrace();
+		}
+
+		BufferedReader br = null;
+		try {
+			LOG.info(props.getString(Importer.EXPORT_FILE_KEY));
+			final File file = new File(props.getString(Importer.EXPORT_FILE_KEY));
+			br = new BufferedReader(new FileReader(file));
+
+			// count for successful inserts
+			int successCount = 0;
+			int successCountWithWarnings = 0;
+			int errorCount = 0;
+			int alreadyInDBCount = 0;
+
+			while (br.ready()) {
+
+				// remove some characters and parentFolders
+				String movieName = br.readLine();
+				movieName = movieName.replace("./", "");
+				movieName = movieName.substring(movieName.indexOf("/") + 1, movieName.length());
+
+				LOG.info("Processing movie \"" + movieName + "\"...");
+
+				// Remove unwanted space from moviename by trimming it and
+				// replace whitespaces with "+"
+				final String movieNameForURL = movieName.trim().replace(" ", "+");
+
+				final Document doc = Importer.searchForMovies(movieNameForURL);
+				final Map<String, String> resultMap = Importer.checkResultList(doc, movieName);
+				resultMap.put(TITLE, movieName);
+
+				if (!Importer.checkWhetherMovieIsAlreadyInDatabase(resultMap.get(TITLE))) {
+					if (resultMap.containsKey(Importer.ERROR)) {
+						errorCount++;
+						Importer.LOG.info("ERROR: " + resultMap.get(Importer.ERROR));
+
+					} else {
+						// load movie details with given ID
+						Importer.loadMovieDetails(resultMap);
+
+						// save details in database
+						Importer.saveDetailsInDatabase(resultMap);
+
+						if (resultMap.containsKey(Importer.WARNING)) {
+							successCountWithWarnings++;
+							Importer.LOG.info("WARNING: " + resultMap.get(Importer.WARNING));
+						}
+
+						successCount++;
+						Importer.LOG.info("... load data for \"" + movieName + "\" was successful");
+					}
+				} else {
+					alreadyInDBCount++;
+					LOG.info("... the movie is already in database, no need to import it.");
+				}
+			}
+
+			LOG.info("-----------------------------------------------------------------------------------");
+			LOG.info("|	Summary:");
+			LOG.info("|     successful movie inserts:           " + successCount);
+			LOG.info("|	    successful movie with warnings:     " + successCountWithWarnings);
+			LOG.info("|	    error count:                        " + errorCount);
+			LOG.info("|	    already in db:                      " + alreadyInDBCount);
+			LOG.info("-----------------------------------------------------------------------------------");
+
+		} catch (final IOException e) {
+			e.printStackTrace();
+		} finally {
+
+			try {
+				if (br != null) {
+					br.close();
+				}
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	/**
 	 * checks the Document with searchResults, whether the wanted movie is in
@@ -246,101 +348,6 @@ public class Importer {
 
 	}
 
-	public static void main(final String[] args) {
-
-		try {
-			// load mysql jdbc driver
-			Class.forName("com.mysql.jdbc.Driver");
-
-			// Setup the connection with the DB
-			Importer.connect = DriverManager.getConnection("jdbc:mysql://localhost/" + props.getString(Importer.MOVIEDB_KEY) + "?user="
-					+ props.getString(Importer.DBUSER_KEY) + "&password=" + props.getString(Importer.DBPASS_KEY));
-
-		} catch (final ClassNotFoundException e) {
-			LOG.info("mysql driver not found");
-			e.printStackTrace();
-		} catch (final SQLException e2) {
-			LOG.info("Connection could not established.");
-			e2.printStackTrace();
-		}
-
-		BufferedReader br = null;
-		try {
-			LOG.info(props.getString(Importer.EXPORT_FILE_KEY));
-			final File file = new File(props.getString(Importer.EXPORT_FILE_KEY));
-			br = new BufferedReader(new FileReader(file));
-
-			// count for successful inserts
-			int successCount = 0;
-			int successCountWithWarnings = 0;
-			int errorCount = 0;
-			int alreadyInDBCount = 0;
-
-			while (br.ready()) {
-
-				// remove some characters and parentFolders
-				String movieName = br.readLine();
-				movieName = movieName.replace("./", "");
-				movieName = movieName.substring(movieName.indexOf("/") + 1, movieName.length());
-
-				LOG.info("Processing movie \"" + movieName + "\"...");
-
-				// Remove unwanted space from moviename by trimming it and
-				// replace whitespaces with "+"
-				final String movieNameForURL = movieName.trim().replace(" ", "+");
-
-				final Document doc = Importer.searchForMovies(movieNameForURL);
-				final Map<String, String> resultMap = Importer.checkResultList(doc, movieName);
-				resultMap.put(TITLE, movieName);
-
-				if (!Importer.checkWhetherMovieIsAlreadyInDatabase(resultMap.get(TITLE))) {
-					if (resultMap.containsKey(Importer.ERROR)) {
-						errorCount++;
-						Importer.LOG.info("ERROR: " + resultMap.get(Importer.ERROR));
-
-					} else {
-						// load movie details with given ID
-						Importer.loadMovieDetails(resultMap);
-
-						// save details in database
-						Importer.saveDetailsInDatabase(resultMap);
-
-						if (resultMap.containsKey(Importer.WARNING)) {
-							successCountWithWarnings++;
-							Importer.LOG.info("WARNING: " + resultMap.get(Importer.WARNING));
-						}
-
-						successCount++;
-						Importer.LOG.info("... load data for \"" + movieName + "\" was successful");
-					}
-				} else {
-					alreadyInDBCount++;
-					LOG.info("... the movie is already in database, no need to import it.");
-				}
-			}
-
-			LOG.info("-----------------------------------------------------------------------------------");
-			LOG.info("|	Summary:");
-			LOG.info("|     successful movie inserts:           " + successCount);
-			LOG.info("|	    successful movie with warnings:     " + successCountWithWarnings);
-			LOG.info("|	    error count:                        " + errorCount);
-			LOG.info("|	    already in db:                      " + alreadyInDBCount);
-			LOG.info("-----------------------------------------------------------------------------------");
-
-		} catch (final IOException e) {
-			e.printStackTrace();
-		} finally {
-
-			try {
-				if (br != null) {
-					br.close();
-				}
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	/**
 	 * Saves the loaded details of a movie in the local db
 	 * 
@@ -349,25 +356,44 @@ public class Importer {
 	private static void saveDetailsInDatabase(final Map<String, String> resultMap) {
 		try {
 			final String queryStr = "INSERT INTO movies (MOV_TITLE, MOV_YEAR, MOV_GENRE, MOV_ACTORS, MOV_PLOT, "
-					+ "MOV_POSTER_URL, MOV_RATING, MOV_WARNING, MOV_IMDB_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ; ";
+					+ "MOV_POSTER_PATH, MOV_RATING, MOV_WARNING, MOV_IMDB_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ; ";
 
 			PreparedStatement statement = connect.prepareStatement(queryStr);
+			// TITLE
 			statement.setString(1, resultMap.get(TITLE));
+			// YEAR
 			statement.setInt(2, Integer.valueOf(resultMap.get(YEAR)));
+			// GENRE
 			statement.setString(3, resultMap.get(GENRE));
+			// ACTORS
 			statement.setString(4, resultMap.get(ACTORS));
+			// PLOT
 			statement.setString(5, resultMap.get(PLOT));
-			statement.setString(6, resultMap.get(POSTER_URL));
+			// POSTER
+			if (resultMap.get(POSTER_URL).contains("http")) {
+				URL url = new URL(resultMap.get(Importer.POSTER_URL));
+				BufferedImage image = ImageIO.read(url);
+				File outputFile = new File(Importer.EXPORT_POSTER_PATH + resultMap.get(Importer.TITLE) + Importer.EXPORT_POSTER_FORMAT);
+				ImageIO.write(image, "jpeg", outputFile);
+				statement.setString(6, Importer.EXPORT_POSTER_PATH + resultMap.get(Importer.TITLE) + Importer.EXPORT_POSTER_FORMAT);
+			} else {
+				statement.setBinaryStream(6, null);
+			}
+			// IMDB RATING
 			statement.setString(7, resultMap.get(IMDB_RATING));
+			// WARNING
 			if (resultMap.containsKey(WARNING)) {
 				statement.setInt(8, 1);
 			} else {
 				statement.setInt(8, 0);
 			}
+			// IMDB ID
 			statement.setString(9, resultMap.get(IMDB_ID));
 			statement.executeUpdate();
 
 		} catch (final SQLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+	<title><ui:insert name="title">Movies List</ui:insert></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</h:head>
+
+<body>
+
+	<script type="text/javascript">
+		// 		window.onload = function() {
+		// 			document.getElementById('form1:link').click();
+		// 		}
+	</script>
+
+	<f:view>
+		<h:form id="form1">
+			<h1>Movies List</h1>
+
+			<p:accordionPanel value="#{movieListModel.movies}" var="movie">
+				<p:tab title="#{movie.title}">
+					<h:panelGrid columns="2" cellpadding="10">
+						<p:graphicImage value="#{movie.posterPath}" />
+						
+						<h:outputText value="#{movie.plot}" />
+					</h:panelGrid>
+
+				</p:tab>
+			</p:accordionPanel>
+
+			<!-- hidden button to see movies without click a button -->
+			<h:panelGroup style="display:show">
+				<p:commandButton id="link" actionListener="#{movieListController.loadAllMovies}" update="@form" process="@form" />
+			</h:panelGroup>
+		</h:form>
+	</f:view>
+</body>
+
+</html>

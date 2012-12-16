@@ -1,0 +1,1 @@
+<jsp:forward page="/facelets/movie_list.jsf" />
