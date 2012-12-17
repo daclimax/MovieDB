@@ -41,7 +41,7 @@ public class Importer {
 
 	final static String EXPORT_FILE_KEY = "export_movies_file";
 
-	final static String EXPORT_POSTER_PATH = "/opt/jetty/export/posters/";
+	final static String EXPORT_POSTER_PATH = "/opt/MovieExport/posters/";
 
 	final static String GENRE = "GENRE";
 
@@ -375,7 +375,7 @@ public class Importer {
 				BufferedImage image = ImageIO.read(url);
 				File outputFile = new File(Importer.EXPORT_POSTER_PATH + resultMap.get(Importer.TITLE) + Importer.EXPORT_POSTER_FORMAT);
 				ImageIO.write(image, "jpeg", outputFile);
-				statement.setString(6, Importer.EXPORT_POSTER_PATH + resultMap.get(Importer.TITLE) + Importer.EXPORT_POSTER_FORMAT);
+				statement.setString(6, resultMap.get(Importer.TITLE) + Importer.EXPORT_POSTER_FORMAT);
 			} else {
 				statement.setBinaryStream(6, null);
 			}

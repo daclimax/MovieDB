@@ -13,17 +13,24 @@
     <url-pattern>*.jsf</url-pattern>
   </servlet-mapping>
   
+  	<servlet>
+    	<servlet-name>PosterServlet</servlet-name>
+    	<servlet-class>servlet.PosterServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+    	<servlet-name>PosterServlet</servlet-name>
+    	<url-pattern>/posters/*</url-pattern>
+	</servlet-mapping>
+
   <welcome-file-list>
 		<welcome-file>index.jsp</welcome-file>
 		<welcome-file>index.html</welcome-file>
   </welcome-file-list>
-  
-  	<!-- disable PrimeFaces theme -->
-<!-- 	<context-param> -->
-<!-- 		<param-name>primefaces.THEME</param-name> -->
-<!-- 		<param-value>home</param-value> -->
-<!-- 	</context-param> -->
-  
+   
+	<context-param>  
+    	<param-name>primefaces.THEME</param-name>  
+    	<param-value>home</param-value>  
+	</context-param> 
 	
   <context-param>
     <param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>

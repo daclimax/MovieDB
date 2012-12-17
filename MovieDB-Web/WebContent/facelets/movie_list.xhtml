@@ -2,38 +2,62 @@
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets"
-	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
+	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui"
+	xmlns:o="http://omnifaces.org/ui" xmlns:of="http://omnifaces.org/functions">
 
 <h:head>
 	<title><ui:insert name="title">Movies List</ui:insert></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+	<o:importConstants type="constants.MovieListConstants" />
 </h:head>
 
 <body>
 
 	<script type="text/javascript">
-		// 		window.onload = function() {
-		// 			document.getElementById('form1:link').click();
-		// 		}
+		window.onload = function() {
+			document.getElementById('form1:link').click();
+		}
 	</script>
 
 	<f:view>
 		<h:form id="form1">
-			<h1>Movies List</h1>
 
 			<p:accordionPanel value="#{movieListModel.movies}" var="movie">
 				<p:tab title="#{movie.title}">
 					<h:panelGrid columns="2" cellpadding="10">
-						<p:graphicImage value="#{movie.posterPath}" />
-						
-						<h:outputText value="#{movie.plot}" />
+						<p:graphicImage value="posters/#{movie.posterPath}" width="210" height="330" />
+
+						<h:panelGrid columns="2" cellpadding="5">
+							<p:outputLabel style="font-weight: bold;" value="#{MovieListConstants.YEAR}" />
+							<p:outputLabel value="#{movie.year}" />
+
+							<p:outputLabel style="font-weight: bold;" value="#{MovieListConstants.GENRE}" />
+							<p:outputLabel value="#{movie.genres}" />
+
+							<p:outputLabel style="font-weight: bold;" value="#{MovieListConstants.ACTORS}" />
+							<p:outputLabel value="#{movie.actors}" />
+
+							<p:outputLabel style="font-weight: bold;" value="#{MovieListConstants.PLOT}" />
+							<p:outputLabel value="#{movie.plot}" />
+
+							<p:outputLabel style="font-weight: bold;" value="#{MovieListConstants.RATING}" />
+							<p:outputLabel value="#{movie.imdbRating}" />
+
+							<p:outputLabel style="font-weight: bold;" value="#{MovieListConstants.IMDB_ID}" />
+							<p:outputLabel value="#{movie.imdbId}" />
+							
+							<p:outputLabel rendered="#{movie.warning}"/>
+							<p:graphicImage rendered="#{movie.warning}" value="posters/1355782448_error.png" alt="Warning"/>
+
+						</h:panelGrid>
 					</h:panelGrid>
 
 				</p:tab>
 			</p:accordionPanel>
 
 			<!-- hidden button to see movies without click a button -->
-			<h:panelGroup style="display:show">
+			<h:panelGroup style="display:none">
 				<p:commandButton id="link" actionListener="#{movieListController.loadAllMovies}" update="@form" process="@form" />
 			</h:panelGroup>
 		</h:form>

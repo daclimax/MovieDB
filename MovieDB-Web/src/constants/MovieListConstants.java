@@ -29,4 +29,21 @@ public class MovieListConstants {
 	public final static String COLUMN_IMDB_ID = "MOV_IMDB_ID";
 
 	public final static String COLUMN_RATING = "MOV_RATING";
+
+	public final static String POSTER_EXPORT_FOLDER = "/opt/MovieExport/posters";
+
+	public final static String TITLE = "Title";
+
+	public final static String YEAR = "Year";
+
+	public final static String GENRE = "Genres";
+
+	public final static String ACTORS = "Actors";
+
+	public final static String PLOT = "Plot";
+
+	public final static String IMDB_ID = "ImdbID";
+
+	public final static String RATING = "Rating";
+
 }

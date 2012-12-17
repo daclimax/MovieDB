@@ -5,10 +5,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import org.apache.commons.beanutils.BeanComparator;
 import org.apache.log4j.Logger;
 
 import service.bean.Movie;
@@ -78,6 +80,7 @@ public class DataServiceImpl {
 	 * 
 	 * @return List<Movie>
 	 */
+	@SuppressWarnings("unchecked")
 	public List<Movie> loadAllMovies() {
 		List<Movie> movies = new LinkedList<Movie>();
 
@@ -106,6 +109,12 @@ public class DataServiceImpl {
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
+
+		if (!movies.isEmpty()) {
+			BeanComparator titleComparator = new BeanComparator("title");
+			Collections.sort(movies, titleComparator);
+		}
+
 		return movies;
 	}
 }
