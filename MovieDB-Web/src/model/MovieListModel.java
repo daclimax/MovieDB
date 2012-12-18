@@ -6,13 +6,7 @@ import java.util.List;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
-import org.primefaces.model.DashboardColumn;
-import org.primefaces.model.DashboardModel;
-import org.primefaces.model.DefaultDashboardColumn;
-import org.primefaces.model.DefaultDashboardModel;
-
 import service.bean.Movie;
-import constants.MovieListConstants;
 
 /**
  * 
@@ -25,43 +19,26 @@ public class MovieListModel {
 
 	private List<Movie> movies;
 
-	private final DashboardModel dashboardModel;
+	private String newImdbId;
 
 	public MovieListModel() {
 		this.movies = new LinkedList<Movie>();
-
-		this.dashboardModel = new DefaultDashboardModel();
-		DashboardColumn columnYear = new DefaultDashboardColumn();
-		DashboardColumn columnGenre = new DefaultDashboardColumn();
-		DashboardColumn columnActors = new DefaultDashboardColumn();
-		DashboardColumn columnPlot = new DefaultDashboardColumn();
-		DashboardColumn columnImdbId = new DefaultDashboardColumn();
-		DashboardColumn columnRating = new DefaultDashboardColumn();
-
-		columnYear.addWidget(MovieListConstants.YEAR);
-		columnGenre.addWidget(MovieListConstants.GENRE);
-		columnActors.addWidget(MovieListConstants.ACTORS);
-		columnPlot.addWidget(MovieListConstants.PLOT);
-		columnImdbId.addWidget(MovieListConstants.IMDB_ID);
-		columnRating.addWidget(MovieListConstants.RATING);
-
-		dashboardModel.addColumn(columnYear);
-		dashboardModel.addColumn(columnGenre);
-		dashboardModel.addColumn(columnActors);
-		dashboardModel.addColumn(columnPlot);
-		dashboardModel.addColumn(columnImdbId);
-		dashboardModel.addColumn(columnRating);
-	}
-
-	public DashboardModel getDashboardModel() {
-		return dashboardModel;
+		this.newImdbId = "";
 	}
 
 	public List<Movie> getMovies() {
 		return movies;
 	}
 
+	public String getNewImdbId() {
+		return newImdbId;
+	}
+
 	public void setMovies(List<Movie> movies) {
 		this.movies = movies;
+	}
+
+	public void setNewImdbId(String newImdbId) {
+		this.newImdbId = newImdbId;
 	}
 }

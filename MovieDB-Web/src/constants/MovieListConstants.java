@@ -46,4 +46,18 @@ public class MovieListConstants {
 
 	public final static String RATING = "Rating";
 
+	public final static String DIALOG_DELETE_WARNING = "Ist der gefundene Film der richtige?";
+
+	public final static String DIALOG_GIVE_IMDB_ID = "Bitte gib die neue ImdbID ein.";
+
+	public final static String WARNING = "Warnung";
+
+	public final static String YES = "Ja";
+
+	public final static String NO = "Nein";
+
+	public final static String CONFIRM = "Bestätigen";
+
+	public final static String CANCEL = "Abbrechen";
+
 }

@@ -46,35 +46,6 @@ public class DataServiceImpl {
 		}
 	}
 
-	/** find a movie by given id */
-	public Movie findMovieById(int movieId) {
-		Movie movie = new Movie();
-		try {
-			final String queryStr = "SELECT * FROM movies WHERE MOV_ID = ?; ";
-			PreparedStatement statement = connect.prepareStatement(queryStr);
-			statement.setInt(1, movieId);
-			final ResultSet resultSet = statement.executeQuery();
-
-			while (resultSet.next()) {
-				movie.setActors(resultSet.getString(MovieListConstants.COLUMN_ACTORS));
-				movie.setCreated(resultSet.getDate(MovieListConstants.COLUMN_CREATED));
-				movie.setGenres(resultSet.getString(MovieListConstants.COLUMN_GENRE));
-				movie.setId(resultSet.getInt(MovieListConstants.COLUMN_ID));
-				movie.setImdbId(resultSet.getString(MovieListConstants.COLUMN_IMDB_ID));
-				movie.setImdbRating(resultSet.getString(MovieListConstants.COLUMN_RATING));
-				movie.setPlot(resultSet.getString(MovieListConstants.COLUMN_PLOT));
-				movie.setPosterPath(resultSet.getString(MovieListConstants.COLUMN_POSTER));
-				movie.setTitle(resultSet.getString(MovieListConstants.COLUMN_TITLE));
-				movie.setWarning(resultSet.getInt(MovieListConstants.COLUMN_WARNING) == 1);
-				movie.setYear(resultSet.getInt(MovieListConstants.COLUMN_YEAR));
-			}
-
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
 	/**
 	 * Load all movies from database.
 	 * 
@@ -116,5 +87,51 @@ public class DataServiceImpl {
 		}
 
 		return movies;
+	}
+
+	/**
+	 * loads a movie by given id
+	 * */
+	public Movie loadMovieById(int movieId) {
+		Movie movie = new Movie();
+		try {
+			final String queryStr = "SELECT * FROM movies WHERE MOV_ID = ?; ";
+			PreparedStatement statement = connect.prepareStatement(queryStr);
+			statement.setInt(1, movieId);
+			final ResultSet resultSet = statement.executeQuery();
+
+			while (resultSet.next()) {
+				movie.setActors(resultSet.getString(MovieListConstants.COLUMN_ACTORS));
+				movie.setCreated(resultSet.getDate(MovieListConstants.COLUMN_CREATED));
+				movie.setGenres(resultSet.getString(MovieListConstants.COLUMN_GENRE));
+				movie.setId(resultSet.getInt(MovieListConstants.COLUMN_ID));
+				movie.setImdbId(resultSet.getString(MovieListConstants.COLUMN_IMDB_ID));
+				movie.setImdbRating(resultSet.getString(MovieListConstants.COLUMN_RATING));
+				movie.setPlot(resultSet.getString(MovieListConstants.COLUMN_PLOT));
+				movie.setPosterPath(resultSet.getString(MovieListConstants.COLUMN_POSTER));
+				movie.setTitle(resultSet.getString(MovieListConstants.COLUMN_TITLE));
+				movie.setWarning(resultSet.getInt(MovieListConstants.COLUMN_WARNING) == 1);
+				movie.setYear(resultSet.getInt(MovieListConstants.COLUMN_YEAR));
+			}
+
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * loads a movie from imdb-api by given imdbId
+	 * */
+	public Movie loadMovieByImdbId(String imdbId) {
+		// TODO: implement the load by imdbId
+		return new Movie();
+	}
+
+	/**
+	 * saves a movie in database and poster on fileSystem
+	 * */
+	public void saveMovie(Movie movie) {
+		// TODO: implement the save!
 	}
 }

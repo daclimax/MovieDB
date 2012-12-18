@@ -12,7 +12,7 @@
 	<o:importConstants type="constants.MovieListConstants" />
 </h:head>
 
-<body>
+<body style="background-color: #292929;">
 
 	<script type="text/javascript">
 		window.onload = function() {
@@ -46,15 +46,37 @@
 
 							<p:outputLabel style="font-weight: bold;" value="#{MovieListConstants.IMDB_ID}" />
 							<p:outputLabel value="#{movie.imdbId}" />
-							
-							<p:outputLabel rendered="#{movie.warning}"/>
-							<p:graphicImage rendered="#{movie.warning}" value="posters/1355782448_error.png" alt="Warning"/>
 
+							<p:outputLabel rendered="#{movie.warning}" />
+							<p:commandLink rendered="#{movie.warning}" type="image" onclick="confirmationWarning.show()">
+								<p:graphicImage rendered="#{movie.warning}" value="posters/1355782448_error.png" alt="Warning" />
+							</p:commandLink>
 						</h:panelGrid>
-					</h:panelGrid>
 
+					</h:panelGrid>
 				</p:tab>
 			</p:accordionPanel>
+
+			<!-- Confirmation Dialog for first click on warning (wish to delete warning) -->
+			<p:confirmDialog id="confirmDialogDeleteWarning" message="#{MovieListConstants.DIALOG_DELETE_WARNING}"
+				header="#{MovieListConstants.WARNING}" severity="alert" widgetVar="confirmationWarning">
+				<p:commandButton id="confirmWarning" value="#{MovieListConstants.YES}" oncomplete="confirmationWarning.hide()"
+					actionListener="#{movieListController.confirmFoundMovie}" />
+				<p:commandButton id="declineAndGiveId" value="#{MovieListConstants.NO}" onclick="confirmationWarning.hide(); confirmationGiveImdbId.show()"
+					type="button" />
+			</p:confirmDialog>
+
+			<!-- Confirmation Dialog for giving new imdbId -->
+			<p:confirmDialog id="confirmGiveImdbId" message="#{MovieListConstants.DIALOG_GIVE_IMDB_ID}"
+				header="#{MovieListConstants.WARNING}" severity="alert" widgetVar="confirmationGiveImdbId">
+				<p:outputLabel value="#{MovieListConstants.IMDB_ID}" />
+				<p:inputText value="#{movieListModel.newImdbId}" />
+				<p:commandButton id="confirmGiveId" value="#{MovieListConstants.CONFIRM}" oncomplete="confirmationGiveImdbId.hide()"
+					actionListener="#{movieListController.confirmFoundMovie}" />
+				<p:commandButton id="decline" value="#{MovieListConstants.CANCEL}" onclick="confirmationGiveImdbId.hide() "
+					type="button" />
+			</p:confirmDialog>
+
 
 			<!-- hidden button to see movies without click a button -->
 			<h:panelGroup style="display:none">

@@ -25,6 +25,10 @@ public class MovieListController {
 		impl = new DataServiceImpl();
 	}
 
+	public void confirmFoundMovie() {
+
+	}
+
 	public void handleReorderDashboard(DashboardReorderEvent event) {
 		FacesMessage message = new FacesMessage();
 		message.setSeverity(FacesMessage.SEVERITY_INFO);
@@ -48,5 +52,4 @@ public class MovieListController {
 	private void addMessage(FacesMessage message) {
 		FacesContext.getCurrentInstance().addMessage(null, message);
 	}
-
 }
